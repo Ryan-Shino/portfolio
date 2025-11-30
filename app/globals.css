@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+@theme {
+  /* My custom colour pallete */
+  --color-deep-charcoal: #242826;
+  --color-midnight-blue: #3D4A3A;
+  --color-slate-grey: #7A8C6F;
+  --color-warm-taupe: #B8A88A;
+  --color-cream-beige: #D4C9B5;
+  --color-soft-sand: #E8E3D9;
+}
+
+:root {
+  --background: #222831;
+  --foreground: #222831;
+}
+
+body {
+  background-color: var(--color-cream-beige);
+  color: var(--color-deep-charcoal);
+  font-family: Arial, Helvetica, sans-serif;
+}

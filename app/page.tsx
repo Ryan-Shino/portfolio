@@ -4,8 +4,9 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import FloatingNav from "@/components/FloatingNav";
 import HorizontalScrollCarousel from "@/components/HorizontalScroll";
-import useMousePosition from "@/components/useMousePosition"; // Adjust path if needed
+import useMousePosition from "@/components/useMousePosition"; 
 import About from "@/components/About";
+import Timeline from "@/components/Timeline";
 import Footer from "@/components/Footer";
 
 export default function Home() {
@@ -105,7 +106,10 @@ export default function Home() {
         <About />
       </div>
 
-
+      {/* Timeline */}
+      <div id="journey" className="bg-cream-beige">
+        <Timeline />
+      </div>
 
       {/* Contact */}
       <div>

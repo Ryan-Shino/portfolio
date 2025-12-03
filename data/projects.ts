@@ -24,14 +24,14 @@ export interface Project {
     { 
       title: "Market Analysis", 
       id: 3, 
-      desc: "A quantitative finance project utilizing Python and Pandas to analyze Ethereum market microstructure, visualizing liquidity metrics and volatility data.", 
+      desc: "A quantitative finance project utilising Python and Pandas to analyse Ethereum market microstructure, visualising liquidity metrics and volatility data.", 
       languages: ["Python Pandas", "Matplotlib", "Jupyter Notebooks"], 
       image: "/Images/CryptoAnalysis.png" 
     },
     { 
       title: "Automated CI/CD ", 
       id: 4, 
-      desc: "A full CI/CD implementation for a Flask app on a Linux Ubuntu VM. Utilizes Docker for containerization, Nginx as a reverse proxy, and GitHub Actions for automated deployment.", 
+      desc: "A full CI/CD implementation for a Flask app on a Linux Ubuntu VM. Utilizes Docker for containerisation, Nginx as a reverse proxy and GitHub Actions for automated deployment.", 
       languages: ["Flask", "Docker", "Nginx", "Linux", "GitHub Actions"], 
       image: "/Images/FlaskApp.png" 
     },

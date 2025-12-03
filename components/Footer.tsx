@@ -30,13 +30,15 @@ export default function Footer() {
         </motion.a>
       </div>
 
+      {/* Add Timeline section with a animated visual */}
+
       {/* Socials and CV */}
       <div className="flex items-end justify-between border-t border-cream-beige/20 pt-8 z-10">
         
         <div className="flex flex-col gap-2">
             <span className="text-sm opacity-50 uppercase tracking-wider">Socials</span>
             <div className="flex gap-6 text-xl font-bold">
-                <a href="https://github.com/Ryan-Shino/Ryan-Shino" target="_blank" className="hover:text-warm-taupe transition-colors">Github</a>
+                <a href="https://github.com/Ryan-Shino/" target="_blank" className="hover:text-warm-taupe transition-colors">Github</a>
                 <a href="https://www.linkedin.com/in/ryan-shino/" target="_blank" className="hover:text-warm-taupe transition-colors">LinkedIn</a>
             </div>
         </div>

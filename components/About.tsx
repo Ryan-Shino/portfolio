@@ -33,18 +33,18 @@ const Card = ({ title, description, bg, text, rotation, index, range, targetScal
   return (
     <div className="h-screen flex items-center justify-center sticky top-30">
       <motion.div 
-        className={`relative flex flex-col gap-8 w-[500px] h-[700px] rounded-3xl p-12 border-2 border-deep-charcoal shadow-2xl origin-top ${bg} ${text}`}
+        className={`relative flex flex-col gap-8 w-[400px] h-[550px] rounded-3xl p-12 border-2 border-deep-charcoal shadow-2xl origin-top ${bg} ${text}`}
         style={{ 
-            scale: range, //shrinking effect 
+            scale: range, //shrinking effect
             rotate: rotation,
             top: `calc(-10% + ${index * 25}px)` // Offset 
         }}
       >
-        <h2 className="text-6xl font-black uppercase tracking-tighter">{title}</h2>
+        <h2 className="text-4xl font-black uppercase tracking-tighter">{title}</h2>
         
         <div className="h-[2px] w-full bg-current opacity-20"></div>
         
-        <p className="text-2xl font-medium leading-relaxed">
+        <p className="text-xl font-medium leading-relaxed">
             {description}
         </p>
 

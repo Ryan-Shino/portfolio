@@ -55,8 +55,8 @@ export default function Home() {
         <motion.div
           className="absolute top-0 left-0 h-full w-full flex items-center justify-center flex-col px-8 pointer-events-none"
           animate={{
-            WebkitMaskPosition: `${x - size / 2}px ${y - size / 2}px`,
-            WebkitMaskSize: `${size}px`,
+            maskPosition: `${x - size / 2}px ${y - size / 2}px`,
+            maskSize: `${size}px`,
           }}
           transition={{ type: "tween", ease: "backOut", duration: 0.5 }}
           style={{

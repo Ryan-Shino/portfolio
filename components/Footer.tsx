@@ -44,15 +44,16 @@ export default function Footer() {
         </div>
 
         <div className="flex flex-col gap-2 text-right">
-             <span className="text-sm opacity-50 uppercase tracking-wider">Downloads</span>
-             <a 
-                href="/resume.pdf" 
-                target="_blank"
-                className="text-xl font-bold hover:text-warm-taupe transition-colors"
-             >
-                Resume.pdf
-             </a>
-        </div>
+          <span className="text-sm opacity-50 uppercase tracking-wider">Downloads</span>
+          <a 
+          href="/RyanShinoCV.pdf" 
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xl font-bold hover:text-warm-taupe transition-colors"
+          >
+          RyanShinoCV.pdf
+          </a>
+      </div>
       </div>
     </div>
   );

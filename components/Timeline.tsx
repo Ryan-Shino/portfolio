@@ -18,42 +18,42 @@ const timelineData: TimelineItem[] = [
     year: "2019-2020", 
     title: "The Foundation", 
     text: "I wanted my computer to do more for me, I used autoclicker softwares to automate my daily tasks. This served as my introduction to scripting and writing programs. ",
-    img: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=800&auto=format&fit=crop" // Skyscraper/Building
+    img: "https://images.unsplash.com/photo-1516116216624-53e697fedbea?q=80&w=800&auto=format&fit=crop" 
   },
   { 
     id: 2, 
     year: "2021", 
     title: "First Taste", 
     text: "Realising the inefficiency of my small scale scripting programs, I looked into automations and realised I could write scripts in Python. ",
-    img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=800&auto=format&fit=crop" // Data/Screen
+    img: "https://images.unsplash.com/photo-1516116216624-53e697fedbea?q=80&w=800&auto=format&fit=crop"
   },
   { 
     id: 3, 
     year: "2022", 
     title: "Leveling Up", 
     text: "I decided to take A-Level Computer Science, giving me the solid theoretical knowledge and understanding I needed. I also was able to learn a new language here(C#), helping me understand a different paradigm. ",
-    img: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=800&auto=format&fit=crop" // Team/People
+    img: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=800&auto=format&fit=crop" 
   },
   { 
     id: 4, 
     year: "2024", 
     title: "Experience", 
     text: "I was able to get experience with the developers that maintain and create new projects at Southampton General Hospital. Seeing the developers build these apps only further inspired me to continue along this path. ",
-    img: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=800&auto=format&fit=crop" // Globe/Network
+    img: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=800&auto=format&fit=crop" 
   },
   { 
     id: 5, 
     year: "2024", 
     title: "Committing", 
     text: "I realised this is my calling as a career and decided to do pursue a Computer Science degree at the University of Southampton. ",
-    img: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=800&auto=format&fit=crop" // Globe/Network
+    img: "https://images.unsplash.com/photo-1516116216624-53e697fedbea?q=80&w=800&auto=format&fit=crop"
   },
   { 
     id: 6, 
     year: "2025", 
     title: "Expanding", 
     text: "Inspired by the talent around me and armed with all the knowledge and experience I had gained, I tried learning new languages like JS and frameworks like React to help me build websites. ",
-    img: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=800&auto=format&fit=crop" // Globe/Network
+    img: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?q=80&w=800&auto=format&fit=crop" 
   },
 ];
 

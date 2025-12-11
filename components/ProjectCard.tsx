@@ -3,7 +3,7 @@ import { Project } from "@/data/projects";
 
 const ProjectCard = ({ card }: { card: Project }) => {
   return (
-    <div className="group relative flex flex-col items-center h-[600px] w-[550px] transition-transform duration-700 hover:scale-110 bg-soft-sand">
+    <div className="group relative flex flex-col items-center h-[500px] w-[550px] transition-transform duration-700 hover:scale-110 bg-soft-sand">
       {/* Hover Effect Container */}
       <div className="relative h-[450px] w-[450px] mt-7 transition-transform duration-700 group-hover:scale-105 bg-slate-grey opacity-50">
         <Image 

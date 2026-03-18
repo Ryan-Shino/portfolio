@@ -1,257 +1,393 @@
 "use client";
 
-import React, { useRef, useState } from "react";
-import { motion, useScroll, useTransform, useSpring, MotionValue } from "framer-motion";
+import dynamic from "next/dynamic";
+import { useRef, useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence, useMotionValue, useSpring } from "framer-motion";
 
-// --- 1. Types & Data (Added Images) ---
-interface TimelineItem {
-  id: number;
+const ForceGraph3D = dynamic(() => import("react-force-graph-3d"), { ssr: false });
+
+// ─── Data ────────────────────────────────────────────────────────────────────
+
+interface GraphNode {
+  id: string;
+  label: string;
   year: string;
-  title: string;
-  text: string;
-  img: string; // URL for the graphic
+  track: "path" | "hackathon" | "converge";
+  description: string;
+  winner?: string;
+  stack?: string;
+  x?: number;
+  y?: number;
+  z?: number;
 }
 
-const timelineData: TimelineItem[] = [
-  { 
-    id: 1, 
-    year: "2019-2020", 
-    title: "The Foundation", 
-    text: "I wanted my computer to do more for me, I used autoclicker softwares to automate my daily tasks. This served as my introduction to scripting and writing programs. ",
-    img: "https://images.unsplash.com/photo-1516116216624-53e697fedbea?q=80&w=800&auto=format&fit=crop" 
-  },
-  { 
-    id: 2, 
-    year: "2021", 
-    title: "First Taste", 
-    text: "Realising the inefficiency of my small scale scripting programs, I looked into automations and realised I could write scripts in Python. ",
-    img: "https://images.unsplash.com/photo-1516116216624-53e697fedbea?q=80&w=800&auto=format&fit=crop"
-  },
-  { 
-    id: 3, 
-    year: "2022", 
-    title: "Leveling Up", 
-    text: "I decided to take A-Level Computer Science, giving me the solid theoretical knowledge and understanding I needed. I also was able to learn a new language here(C#), helping me understand a different paradigm. ",
-    img: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=800&auto=format&fit=crop" 
-  },
-  { 
-    id: 4, 
-    year: "2024", 
-    title: "Experience", 
-    text: "I was able to get experience with the developers that maintain and create new projects at Southampton General Hospital. Seeing the developers build these apps only further inspired me to continue along this path. ",
-    img: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=800&auto=format&fit=crop" 
-  },
-  { 
-    id: 5, 
-    year: "2024", 
-    title: "Committing", 
-    text: "I realised this is my calling as a career and decided to do pursue a Computer Science degree at the University of Southampton. ",
-    img: "https://images.unsplash.com/photo-1516116216624-53e697fedbea?q=80&w=800&auto=format&fit=crop"
-  },
-  { 
-    id: 6, 
-    year: "2025", 
-    title: "Expanding", 
-    text: "Inspired by the talent around me and armed with all the knowledge and experience I had gained, I tried learning new languages like JS and frameworks like React to help me build websites. ",
-    img: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?q=80&w=800&auto=format&fit=crop" 
-  },
+interface GraphLink {
+  source: string;
+  target: string;
+  primary?: boolean;
+}
+
+const graphNodes: GraphNode[] = [
+  { id: "a1", label: "The Foundation",  year: "2019–2020", track: "path",      description: "Autoclicker software, introduction to scripting and writing programs." },
+  { id: "a2", label: "First Taste",     year: "2021",      track: "path",      description: "Discovered Python, started writing proper automation scripts." },
+  { id: "a3", label: "Leveling Up",     year: "2022",      track: "path",      description: "A-Level Computer Science, learned C# and new programming paradigms." },
+  { id: "a4", label: "Experience",      year: "2024",      track: "path",      description: "Developer placement with the team at Southampton General Hospital." },
+  { id: "a5", label: "Committing",      year: "2024",      track: "path",      description: "Enrolled in Computer Science at the University of Southampton." },
+  { id: "a6", label: "Expanding",       year: "2025",      track: "path",      description: "Learned JavaScript and React, started building for the web." },
+  { id: "b1", label: "Wander Quest",   year: "2024",      track: "hackathon", winner: "WECS × Soton Datascience Hackathon — Winner",       description: "Gamified real-world exploration app inspired by Stardew Valley. Geolocation categorises environment and rewards with XP, level-ups and a friends leaderboard.", stack: "React, Tailwind, FastAPI, Python, Mapbox API" },
+  { id: "b2", label: "Echo",            year: "2026",      track: "hackathon", winner: "SotonHack 2026 — Winner, Best Use of ElevenLabs",   description: "Voice-based social platform combining anonymous Reddit-style Q&A with BeReal-style daily check-ins. ElevenLabs voices for anonymity, Gemini API for interest classification.", stack: "React, Tailwind, FastAPI, Python, ElevenLabs API, Gemini API, MongoDB Atlas" },
+  { id: "c1", label: "What's Next?",   year: "",          track: "converge",  description: "The story's still being written." },
 ];
 
-const colors = {
-  charcoal: "#242826",
-  darkOlive: "#3D4A3A",
-  sage: "#7A8C6F",
-  tan: "#B8A88A",
-  lightBeige: "#D4C9B5",
-  cream: "#E8E3D9",
-};
+// Path nodes: a1-a3 use accent2 tone (formative), a4-a6 use accent (committed)
+const PATH_NODE_EARLY = new Set(["a1", "a2", "a3"]);
 
-// --- 2. The Flip Card Component ---
-const FlipCard = ({ data, isEven }: { data: TimelineItem; isEven: boolean }) => {
-  // We use a state to track hover for the flip
-  const [isFlipped, setIsFlipped] = useState(false);
+const graphLinks: GraphLink[] = [
+  { source: "a1", target: "a2", primary: true },
+  { source: "a2", target: "a3", primary: true },
+  { source: "a3", target: "a4", primary: true },
+  { source: "a4", target: "a5", primary: true },
+  { source: "a5", target: "a6", primary: true },
+  { source: "a6", target: "c1", primary: true },
+  { source: "a3", target: "b1", primary: true },
+  { source: "b1", target: "b2", primary: true },
+  { source: "b2", target: "c1", primary: true },
+  { source: "a1", target: "a3" },
+  { source: "a2", target: "b1" },
+  { source: "a5", target: "b2" },
+  { source: "a4", target: "b1" },
+  { source: "a6", target: "b2" },
+  { source: "a3", target: "a5" },
+  { source: "a2", target: "a4" },
+  { source: "b1", target: "a5" },
+];
 
-  return (
-    <div
-      className="w-full md:w-[45%] h-[300px] perspective-1000" // Set fixed height or min-height for consistent flip
-      onMouseEnter={() => setIsFlipped(true)}
-      onMouseLeave={() => setIsFlipped(false)}
-    >
-      <motion.div
-        className="relative w-full h-full"
-        initial={false}
-        animate={{ rotateY: isFlipped ? 180 : 0 }}
-        transition={{ duration: 0.6, type: "spring", stiffness: 260, damping: 20 }}
-        style={{ transformStyle: "preserve-3d" }}
-      >
-        {/* --- FRONT FACE (Text) --- */}
-        <div
-          className="absolute inset-0 w-full h-full p-8 rounded-2xl border flex flex-col justify-center"
-          style={{
-            backgroundColor: colors.charcoal,
-            borderColor: colors.darkOlive,
-            backfaceVisibility: "hidden", // Hides this face when rotated
-            zIndex: 2,
-          }}
-        >
-          <span
-            className="inline-block self-start px-3 py-1 rounded-full text-xs font-bold mb-4 shadow-inner"
-            style={{ backgroundColor: colors.darkOlive, color: colors.lightBeige }}
-          >
-            {data.year}
-          </span>
-          <h3 className="text-3xl font-serif mb-3 tracking-wide" style={{ color: colors.cream }}>
-            {data.title}
-          </h3>
-          <p className="text-base leading-relaxed opacity-90" style={{ color: colors.tan }}>
-            {data.text}
-          </p>
-          
-          {/* Helper visual to indicate it flips */}
-          <div className="absolute bottom-6 right-6 opacity-30">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={colors.tan} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-              <path d="M3 3v5h5" />
-              <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
-              <path d="M16 16h5v5" />
-            </svg>
+const traversalOrder = ["a1", "a2", "a3", "b1", "a4", "b2", "a5", "a6", "c1"];
+
+const MobileTimeline = () => (
+  <div className="py-16 px-6 max-w-2xl mx-auto">
+    {graphNodes.map((n) => (
+      <div key={n.id} className="mb-8 pb-8 border-b border-white/10">
+        {n.year && <span className="font-mono text-xs" style={{ color: "#7A8C6F" }}>{n.year}</span>}
+        <h4 className="text-lg font-bold mt-1" style={{ color: "#E8E3D9" }}>{n.label}</h4>
+        {n.winner && <span className="text-xs uppercase tracking-wider font-bold block mt-1" style={{ color: "#B8A88A" }}>{n.winner}</span>}
+        <p className="text-sm mt-2 leading-relaxed" style={{ color: "#7A8C6F" }}>{n.description}</p>
+        {n.stack && (
+          <div className="flex flex-wrap gap-2 mt-3">
+            {n.stack.split(", ").map((t) => (
+              <span key={t} className="text-xs px-2 py-0.5 rounded" style={{ backgroundColor: "#3D4A3A55", color: "#7A8C6F", border: "1px solid #3D4A3A" }}>{t}</span>
+            ))}
           </div>
-        </div>
+        )}
+      </div>
+    ))}
+  </div>
+);
 
-        {/* --- BACK FACE (Image) --- */}
-        <div
-          className="absolute inset-0 w-full h-full rounded-2xl overflow-hidden border"
-          style={{
-            backgroundColor: colors.darkOlive,
-            borderColor: colors.sage,
-            backfaceVisibility: "hidden",
-            transform: "rotateY(180deg)", // Starts facing away
-            zIndex: 1,
-          }}
-        >
-          {/* The Image */}
-          <img 
-            src={data.img} 
-            alt={data.title} 
-            className="w-full h-full object-cover opacity-60 mix-blend-overlay grayscale hover:grayscale-0 transition-all duration-500"
-          />
-          
-          {/* Overlay Gradient for readability/style */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+// ─── Main Component ───────────────────────────────────────────────────────────
+const Timeline = () => {
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const graphRef = useRef<any>(null);
+  const [activeNodeId, setActiveNodeId] = useState<string | null>(null);
+  const [visitedNodes, setVisitedNodes] = useState<Set<string>>(new Set());
+  const [traversalStep, setTraversalStep] = useState(-1);
+  const [isMobile, setIsMobile] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const rotateIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const angleRef = useRef(0);
 
-          {/* Text on Back */}
-          <div className="absolute bottom-0 left-0 w-full p-6 translate-z-10 text-white">
-            <p className="font-serif italic text-xl">{data.title}</p>
-          </div>
-        </div>
-      </motion.div>
-    </div>
-  );
-};
+  // Left-side scroll progress
+  const progressMV = useMotionValue(0);
+  const progressSpring = useSpring(progressMV, { stiffness: 80, damping: 20 });
 
-// --- 3. Wrapper Component for Scroll Animation ---
-const TimelineItemWrapper = ({
-  data,
-  index,
-  scrollYProgress,
-}: {
-  data: TimelineItem;
-  index: number;
-  scrollYProgress: MotionValue<number>;
-}) => {
-  const isEven = index % 2 === 0;
-  
-  return (
-    <div className={`flex w-full mb-32 relative ${isEven ? "justify-start" : "justify-end"}`}>
-      
-      {/* Connector Dot */}
-      <motion.div
-        initial={{ scale: 0 }}
-        whileInView={{ scale: 1 }}
-        viewport={{ once: true }}
-        transition={{ type: "spring", stiffness: 300, damping: 20 }}
-        className="absolute left-1/2 top-1/2 w-4 h-4 rounded-full z-10 -translate-x-1/2 -translate-y-1/2"
-        style={{
-          backgroundColor: colors.charcoal,
-          boxShadow: `0 0 0 4px ${colors.darkOlive}`,
-        }}
-      />
+  useEffect(() => {
+    setMounted(true);
+    setIsMobile(window.innerWidth < 768);
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
 
-      {/* Entrance Animation Wrapper */}
-      <motion.div
-        initial={{ opacity: 0, x: isEven ? -50 : 50 }}
-        whileInView={{ opacity: 1, x: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="w-full flex"
-        style={{ justifyContent: isEven ? 'flex-start' : 'flex-end' }}
-      >
-        <FlipCard data={data} isEven={isEven} />
-      </motion.div>
-    </div>
-  );
-};
+    const handleScroll = () => {
+      const el = sectionRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const progress = Math.max(0, Math.min(1,
+        (window.innerHeight - rect.top) / (rect.height + window.innerHeight)
+      ));
+      progressMV.set(progress);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
 
-// --- 4. Main Timeline Component ---
-const Timeline: React.FC = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end end"],
-  });
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("scroll", handleScroll);
+      if (rotateIntervalRef.current) clearInterval(rotateIntervalRef.current);
+    };
+  }, [progressMV]);
 
-  const scaleY = useSpring(scrollYProgress, {
-    stiffness: 200,
-    damping: 20,
-    restDelta: 0.001,
-  });
+  const startRotation = useCallback(() => {
+    if (rotateIntervalRef.current) clearInterval(rotateIntervalRef.current);
+    rotateIntervalRef.current = setInterval(() => {
+      if (!graphRef.current) return;
+      angleRef.current += 0.003;
+      const dist = 400;
+      graphRef.current.cameraPosition({
+        x: dist * Math.sin(angleRef.current),
+        z: dist * Math.cos(angleRef.current),
+      });
+    }, 16);
+  }, []);
+
+  const stopRotation = useCallback(() => {
+    if (rotateIntervalRef.current) {
+      clearInterval(rotateIntervalRef.current);
+      rotateIntervalRef.current = null;
+    }
+  }, []);
+
+  const activeNode = activeNodeId ? graphNodes.find((n) => n.id === activeNodeId) ?? null : null;
+
+  const focusNode = useCallback((node: GraphNode) => {
+    if (node.id === "c1") {
+      document.getElementById("whats-next")?.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+    stopRotation();
+    setActiveNodeId(node.id);
+    setVisitedNodes((prev) => new Set(prev).add(node.id));
+    if (graphRef.current && node.x !== undefined) {
+      graphRef.current.cameraPosition(
+        { x: node.x, y: node.y, z: (node.z ?? 0) + 150 },
+        node,
+        800
+      );
+    }
+  }, [stopRotation]);
+
+  const handleNodeClick = useCallback((node: any) => {
+    focusNode(node as GraphNode);
+  }, [focusNode]);
+
+  const handleNext = () => {
+    const nextStep = traversalStep + 1;
+    if (nextStep >= traversalOrder.length) return;
+    const nodeId = traversalOrder[nextStep];
+    setTraversalStep(nextStep);
+    if (nodeId === "c1") {
+      document.getElementById("whats-next")?.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+    const node = graphNodes.find((n) => n.id === nodeId)!;
+    focusNode(node);
+  };
+
+  const nodeColor = useCallback((node: any): string => {
+    const n = node as GraphNode;
+    if (n.track === "hackathon") return "#B8A88A";
+    if (n.track === "converge") return "#ffffff";
+    // Early path nodes get accent2 tone, recent get accent tone
+    if (PATH_NODE_EARLY.has(n.id)) return "rgba(123,158,135,0.6)";
+    return visitedNodes.has(n.id) ? "rgba(184,168,138,0.9)" : "rgba(184,168,138,0.7)";
+  }, [visitedNodes]);
+
+  const linkColor = useCallback((link: any): string => {
+    return link.primary ? "rgba(184,168,138,0.25)" : "rgba(184,168,138,0.08)";
+  }, []);
+
+  const nodeThreeObject = useCallback((node: any) => {
+    if (node.id !== activeNodeId) return undefined;
+    try {
+      const THREE = (window as any).THREE;
+      if (!THREE) return undefined;
+      const group = new THREE.Group();
+      const geo = new THREE.SphereGeometry(6, 16, 16);
+      const mat = new THREE.MeshStandardMaterial({ color: "#B8A88A", emissive: "#B8A88A", emissiveIntensity: 0.6 });
+      group.add(new THREE.Mesh(geo, mat));
+      const light = new THREE.PointLight("#B8A88A", 2, 60);
+      group.add(light);
+      return group;
+    } catch {
+      return undefined;
+    }
+  }, [activeNodeId]);
+
+  const isLastStep = traversalStep === traversalOrder.length - 1;
+  const nextButtonLabel = isLastStep ? "Scroll to What's Next ↓" : "Next →";
 
   return (
     <section
-      ref={containerRef}
-      className="relative min-h-screen py-32 overflow-hidden"
-      style={{ backgroundColor: colors.lightBeige }}
+      id="journey"
+      ref={sectionRef}
+      className="relative w-full overflow-hidden"
+      style={{ backgroundColor: "#1a1f1c", height: "100vh" }}
     >
-      <div className="max-w-5xl mx-auto px-6 relative">
-        
-        {/* Title */}
-        <motion.div 
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          className="text-center mb-24"
-        >
-          <h2 className="text-5xl font-black uppercase tracking-tighter" style={{ color: colors.charcoal }}>
-            My Journey
-          </h2>
-        </motion.div>
-
-        {/* Center Line */}
+      {/* ── Left-side scroll progress bar ── */}
+      <div
+        style={{
+          position: "absolute",
+          left: 24,
+          top: "10%",
+          height: "80%",
+          width: 2,
+          backgroundColor: "rgba(184,168,138,0.15)",
+          zIndex: 15,
+          borderRadius: 2,
+        }}
+      >
         <motion.div
-          className="absolute left-1/2 top-0 bottom-0 w-[2px] mt-23 -translate-x-1/2 origin-top rounded-full"
           style={{
-            scaleY,
-            backgroundColor: colors.charcoal,
-            zIndex: 0,
+            width: "100%",
+            scaleY: progressSpring,
+            transformOrigin: "top",
+            background: "linear-gradient(to bottom, #7B9E87, #B8A88A)",
+            borderRadius: 2,
+            height: "100%",
           }}
         />
-        
-        {/* Background Track for Line */}
-        <div className="absolute left-1/2 top-0 bottom-0 w-[2px] mt-23 -translate-x-1/2 opacity-20 z-0" 
-        style={{
-          backgroundColor: colors.charcoal
-        }}
-        />
+        {/* Pulsing chevron at bottom */}
+        <button
+          onClick={() => document.getElementById("whats-next")?.scrollIntoView({ behavior: "smooth" })}
+          style={{
+            position: "absolute",
+            bottom: -28,
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            color: "#B8A88A",
+            fontSize: "14px",
+            animation: "chevron-pulse 2s ease-in-out infinite",
+          }}
+          aria-label="Scroll to What's Next"
+        >
+          ↓
+        </button>
+      </div>
 
-        {/* Items */}
-        <div className="relative z-10">
-          {timelineData.map((item, index) => (
-            <TimelineItemWrapper
-              key={item.id}
-              data={item}
-              index={index}
-              scrollYProgress={scrollYProgress}
-            />
-          ))}
+      {/* Heading overlay */}
+      <motion.div
+        className="absolute top-10 left-0 right-0 z-10 text-center pointer-events-none"
+        initial={{ opacity: 0, y: -20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.7 }}
+      >
+        <h2
+          className="font-black uppercase tracking-tighter leading-none"
+          style={{ fontSize: "clamp(2.5rem, 6vw, 5rem)", color: "#E8E3D9" }}
+        >
+          My Journey
+        </h2>
+        <p className="text-lg mt-2 font-medium italic" style={{ color: "#7A8C6F" }}>
+          The road so far.
+        </p>
+      </motion.div>
+
+      {/* Mobile */}
+      {mounted && isMobile && (
+        <div className="overflow-y-auto h-full pt-32">
+          <MobileTimeline />
+        </div>
+      )}
+
+      {/* 3D Graph */}
+      {mounted && !isMobile && (
+        <ForceGraph3D
+          ref={graphRef}
+          graphData={{ nodes: graphNodes, links: graphLinks }}
+          backgroundColor="rgba(0,0,0,0)"
+          nodeLabel=""
+          nodeColor={nodeColor}
+          nodeVal={(node: any) => {
+            const n = node as GraphNode;
+            return n.track === "converge" ? 6 : n.track === "hackathon" ? 4 : 2;
+          }}
+          nodeThreeObject={nodeThreeObject}
+          nodeThreeObjectExtend={false}
+          linkColor={linkColor}
+          linkWidth={0.5}
+          linkOpacity={1}
+          nodeOpacity={0.9}
+          nodeResolution={32}
+          enableNodeDrag={true}
+          enableNavigationControls={true}
+          showNavInfo={false}
+          onNodeClick={handleNodeClick}
+          width={typeof window !== "undefined" ? window.innerWidth : undefined}
+          height={typeof window !== "undefined" ? window.innerHeight : undefined}
+          onEngineStop={() => {
+            const fg = graphRef.current;
+            if (!fg) return;
+            try {
+              fg.d3Force("charge")?.strength(-200);
+              fg.d3Force("link")?.distance(120);
+              if (fg.controls) {
+                fg.controls().enableZoom = false;
+                fg.controls().enableRotate = true;
+              }
+            } catch {}
+            startRotation();
+          }}
+        />
+      )}
+
+      {/* Bottom overlay */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 flex flex-col items-center pb-8 pointer-events-none">
+        <AnimatePresence mode="wait">
+          {activeNode && (
+            <motion.div
+              key={activeNode.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ duration: 0.3 }}
+              className="mb-5 mx-4 max-w-lg w-full rounded-2xl p-5 text-left pointer-events-auto"
+              style={{
+                backgroundColor: "rgba(26,31,28,0.92)",
+                backdropFilter: "blur(16px)",
+                border: "1px solid rgba(184,168,138,0.2)",
+              }}
+            >
+              {activeNode.year && (
+                <span className="font-mono text-xs block mb-1" style={{ color: "#7A8C6F" }}>
+                  {activeNode.year}
+                </span>
+              )}
+              <h4 className="text-lg font-bold leading-tight mb-1" style={{ color: "#E8E3D9" }}>
+                {activeNode.label}
+              </h4>
+              {activeNode.winner && (
+                <span className="text-xs uppercase tracking-wider font-black block mb-2" style={{ color: "#B8A88A" }}>
+                  {activeNode.winner}
+                </span>
+              )}
+              <p className="text-sm leading-relaxed" style={{ color: "#B8A88A99" }}>
+                {activeNode.description}
+              </p>
+              {activeNode.stack && (
+                <div className="flex flex-wrap gap-1.5 mt-3">
+                  {activeNode.stack.split(", ").map((tech) => (
+                    <span key={tech} className="text-xs px-2 py-0.5 rounded" style={{ backgroundColor: "#3D4A3A55", color: "#7A8C6F", border: "1px solid #3D4A3A" }}>{tech}</span>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="flex items-center gap-5 pointer-events-auto">
+          <span className="font-mono text-xs" style={{ color: "#7A8C6F55" }}>
+            {traversalStep < 0 ? "—" : `${traversalStep + 1} / ${traversalOrder.length}`}
+          </span>
+          <button
+            onClick={handleNext}
+            className="text-sm font-bold px-4 py-2 rounded-lg transition-colors duration-200"
+            style={{ color: "#B8A88A", border: "1px solid #B8A88A", background: "transparent" }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = "#B8A88A22"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = "transparent"; }}
+          >
+            {nextButtonLabel}
+          </button>
         </div>
       </div>
     </section>

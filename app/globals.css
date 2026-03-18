@@ -13,10 +13,70 @@
 :root {
   --background: #222831;
   --foreground: #222831;
+  /* Extended palette */
+  --accent: #B8A88A;
+  --accent-dim: rgba(184,168,138,0.15);
+  --accent2: #7B9E87;
+  --accent2-dim: rgba(123,158,135,0.12);
+  --text-muted: #666660;
+  --surface1: #111111;
+  --surface2: #181818;
+  --surface3: #222220;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background-color: var(--color-cream-beige);
   color: var(--color-deep-charcoal);
   font-family: Arial, Helvetica, sans-serif;
+  cursor: none;
+}
+
+/* Hide cursor on all interactive elements too */
+a, button, [data-cursor-expand] {
+  cursor: none;
+}
+
+/* Reduced motion: no custom cursor transitions */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Shimmer keyframe for EST badge */
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, #B8A88A 25%, #E8E3D9 50%, #B8A88A 75%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 3s linear infinite;
+}
+
+/* Gradient orb animation */
+@keyframes orb-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -20px) scale(1.05); }
+  66% { transform: translate(-20px, 15px) scale(0.95); }
+}
+
+/* Chevron pulse for Journey scroll bar */
+@keyframes chevron-pulse {
+  0%, 100% { opacity: 0.4; transform: translateX(-50%) translateY(0); }
+  50% { opacity: 1; transform: translateX(-50%) translateY(3px); }
+}
+
+.orb-animate {
+  animation: orb-drift 8s ease-in-out infinite;
 }

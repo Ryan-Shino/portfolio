@@ -3,23 +3,20 @@
 import { motion } from "framer-motion";
 
 const navLinks = [
-  { name: "Home", id: "home" },
+  { name: "Home",    id: "home" },
   { name: "Projects", id: "projects" },
-  { name: "About", id: "about" },
+  { name: "About",   id: "about" },
   { name: "Journey", id: "journey" },
   { name: "Contact", id: "contact" },
 ];
 
 const FloatingNav = () => {
-  const scrollToSection = (id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-    }
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.8, ease: "easeOut" }}
@@ -29,7 +26,7 @@ const FloatingNav = () => {
         {navLinks.map((item) => (
           <button
             key={item.name}
-            onClick={() => scrollToSection(item.id.toLowerCase())}
+            onClick={() => scrollTo(item.id)}
             className="text-deep-charcoal font-bold text-sm uppercase tracking-wider hover:text-warm-taupe transition-colors"
           >
             {item.name}
